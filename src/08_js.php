@@ -2,6 +2,30 @@
     <script>
         window.activeTabOnLoad = '<?= $initial_tab ?>';
 
+        // ─── THEME TOGGLE ───
+        (function () {
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('hf-theme', theme);
+                var moon = document.getElementById('theme-ico-moon');
+                var sun  = document.getElementById('theme-ico-sun');
+                if (moon && sun) {
+                    moon.style.display = theme === 'dark' ? '' : 'none';
+                    sun.style.display  = theme === 'dark' ? 'none' : '';
+                }
+            }
+            // Синхронизируем иконку с текущей темой (атрибут уже мог быть установлен anti-flash скриптом)
+            applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+
+            var btn = document.getElementById('btn-theme');
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    var current = document.documentElement.getAttribute('data-theme') || 'light';
+                    applyTheme(current === 'dark' ? 'light' : 'dark');
+                });
+            }
+        })();
+
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 const target = tab.dataset.target;
