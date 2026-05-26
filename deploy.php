@@ -25,29 +25,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pw'])) {
     }
 }
 
-function fetch_url($url) {
+function fetch_url($url, $headers = []) {
     if (function_exists('curl_init')) {
         $ch = curl_init($url);
-        curl_setopt_array($ch, [
+        $opts = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 15,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_USERAGENT      => 'deploy.php/1.0',
-        ]);
+            CURLOPT_FOLLOWLOCATION => true,
+        ];
+        if (!empty($headers)) {
+            $opts[CURLOPT_HTTPHEADER] = $headers;
+        }
+        curl_setopt_array($ch, $opts);
         $body = curl_exec($ch);
-        $ok   = !curl_errno($ch) && curl_getinfo($ch, CURLINFO_HTTP_CODE) < 400;
+        $errno = curl_errno($ch);
+        $code  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        if ($ok && $body !== '') return $body;
+        if (!$errno && $code < 400 && $body !== '') return $body;
+        if ($errno || $code >= 400) return false;
     }
     if (ini_get('allow_url_fopen')) {
-        $body = @file_get_contents($url);
+        $ctx  = stream_context_create(['http' => [
+            'user_agent' => 'deploy.php/1.0',
+            'header'     => implode("\r\n", $headers),
+            'timeout'    => 15,
+        ]]);
+        $body = @file_get_contents($url, false, $ctx);
         if ($body !== false && $body !== '') return $body;
     }
     return false;
 }
 
-$deployed = false;
-$errors   = [];
+$deployed  = false;
+$errors    = [];
+$sha7      = null;
+$shaError  = null;
 
 if (!empty($_SESSION['deploy_ok']) && isset($_POST['do_deploy'])) {
     $out = '';
@@ -66,15 +80,34 @@ if (!empty($_SESSION['deploy_ok']) && isset($_POST['do_deploy'])) {
     }
 
     if (empty($errors)) {
-        // Вшиваем SHA последнего коммита, чтобы helpfile.php умел проверять обновления
-        $apiData = fetch_url('https://api.github.com/repos/Lernoy/seo-helpfile/commits/master');
+        // Вшиваем SHA последнего коммита
+        $apiHeaders = [
+            'Accept: application/vnd.github.v3+json',
+            'User-Agent: deploy.php/1.0',
+        ];
+        $apiData = fetch_url(
+            'https://api.github.com/repos/Lernoy/seo-helpfile/commits/master',
+            $apiHeaders
+        );
         if ($apiData) {
             $commit = json_decode($apiData, true);
             if (!empty($commit['sha'])) {
                 $sha7 = substr($commit['sha'], 0, 7);
-                $out  = str_replace("define('HELPFILE_BUILD', 'dev')", "define('HELPFILE_BUILD', '{$sha7}')", $out);
+                $out  = str_replace(
+                    "define('HELPFILE_BUILD', 'dev')",
+                    "define('HELPFILE_BUILD', '{$sha7}')",
+                    $out
+                );
+            } else {
+                $shaError = 'Ответ API получен, но поле sha не найдено';
+                if (!empty($commit['message'])) {
+                    $shaError .= ': ' . $commit['message']; // напр. "API rate limit exceeded"
+                }
             }
+        } else {
+            $shaError = 'Не удалось обратиться к api.github.com (нет доступа с сервера)';
         }
+
         file_put_contents(__DIR__ . '/helpfile.php', $out);
         $deployed = true;
     }
@@ -114,15 +147,20 @@ if (empty($_SESSION['deploy_ok'])):
     <title>Deploy — SEO Helpfile</title>
     <style>
         body { font-family: Arial, sans-serif; background: #eef0f3; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .box { background: #fff; border: 1px solid #d8dde6; border-radius: 4px; padding: 36px; width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+        .box { background: #fff; border: 1px solid #d8dde6; border-radius: 4px; padding: 36px; width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
         h2 { font-size: 16px; margin: 0 0 16px; color: #333; }
         .info { font-size: 12px; color: #6b7280; margin-bottom: 20px; line-height: 1.6; }
         .info code { background: #f1f5f9; padding: 1px 5px; border-radius: 2px; font-size: 11px; }
         button { width: 100%; padding: 11px; background: #27ae60; color: #fff; border: none; border-radius: 3px; font-size: 14px; font-weight: 600; cursor: pointer; }
         button:hover { background: #219a52; }
-        .ok { background: #f0fdf4; border: 1px solid #86efac; border-radius: 4px; padding: 16px; text-align: center; }
-        .ok a { display: inline-block; margin-top: 12px; padding: 10px 24px; background: #4a90d9; color: #fff; border-radius: 3px; text-decoration: none; font-weight: 600; font-size: 14px; }
+        .ok { background: #f0fdf4; border: 1px solid #86efac; border-radius: 4px; padding: 16px; }
+        .ok-title { color: #166534; font-size: 15px; font-weight: 700; }
+        .ok-sub { font-size: 12px; color: #6b7280; margin-top: 4px; }
+        .ok a { display: inline-block; margin-top: 14px; padding: 10px 24px; background: #4a90d9; color: #fff; border-radius: 3px; text-decoration: none; font-weight: 600; font-size: 14px; }
         .ok a:hover { background: #357abd; }
+        .sha-ok { margin-top: 10px; font-size: 12px; color: #166534; }
+        .sha-ok code { background: #dcfce7; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+        .sha-warn { margin-top: 10px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 3px; padding: 8px 12px; font-size: 11px; color: #795548; line-height: 1.5; }
         .err-list { background: #fff0f0; border: 1px solid #fca5a5; border-radius: 4px; padding: 12px; font-size: 12px; color: #c0392b; margin-top: 14px; }
         .err-list li { margin-top: 4px; }
     </style>
@@ -131,9 +169,17 @@ if (empty($_SESSION['deploy_ok'])):
 <div class="box">
 <?php if ($deployed): ?>
     <div class="ok">
-        <strong style="color:#166534;font-size:15px">Готово!</strong><br>
-        <span style="font-size:12px;color:#6b7280">helpfile.php собран из <?= count(PARTS) ?> частей</span>
-        <br><a href="/helpfile.php">Открыть helpfile.php →</a>
+        <div class="ok-title">Готово!</div>
+        <div class="ok-sub">helpfile.php собран из <?= count(PARTS) ?> частей</div>
+        <?php if ($sha7): ?>
+            <div class="sha-ok">Сборка: <code><?= htmlspecialchars($sha7) ?></code> — обновления будут отслеживаться автоматически</div>
+        <?php else: ?>
+            <div class="sha-warn">
+                Версия сборки не вшита (build = 'dev') — проверка обновлений будет недоступна.<br>
+                Причина: <?= htmlspecialchars($shaError ?? 'неизвестно') ?>
+            </div>
+        <?php endif; ?>
+        <a href="/helpfile.php">Открыть helpfile.php →</a>
     </div>
 <?php elseif (!empty($errors)): ?>
     <h2>Ошибка загрузки</h2>
