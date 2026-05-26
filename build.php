@@ -15,6 +15,7 @@ foreach ($parts as $i => $file) {
     } else {
         // Убираем открывающий <?php из всех частей кроме первой
         // (части 07/08 начинаются с HTML — тег и так отсутствует)
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content); // strip BOM
         $content = preg_replace('/^<\?php\s*/u', '', $content);
         $out .= "\n" . $content;
     }

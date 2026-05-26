@@ -1,4 +1,4 @@
-﻿
+
 <body>
 
     <!-- TOPBAR -->
@@ -23,13 +23,6 @@
 
         <div class="topbar-sep"></div>
         <span class="topbar-meta" id="topbar-stats"></span>
-        <a id="update-badge" class="update-badge" href="/deploy.php" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <polyline points="23 4 23 10 17 10"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-            </svg>
-            Доступно обновление
-        </a>
         <form method="POST" style="margin:0">
             <input type="hidden" name="helpfile_logout" value="1">
             <button type="submit" class="btn-logout">Выйти</button>

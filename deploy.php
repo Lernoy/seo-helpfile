@@ -58,6 +58,7 @@ if (!empty($_SESSION['deploy_ok']) && isset($_POST['do_deploy'])) {
             continue;
         }
         if ($i > 0) {
+            $content = preg_replace('/^\xEF\xBB\xBF/', '', $content); // strip BOM
             $content = preg_replace('/^<\?php\s*/u', '', $content);
             $out .= "\n";
         }

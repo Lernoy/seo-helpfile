@@ -1,4 +1,4 @@
-﻿    <!-- СКРИПТЫ СИСТЕМЫ -->
+    <!-- СКРИПТЫ СИСТЕМЫ -->
     <script>
         window.activeTabOnLoad = '<?= $initial_tab ?>';
 
@@ -542,23 +542,6 @@
                 });
             }
 
-        })();
-
-        // ─── ПРОВЕРКА ОБНОВЛЕНИЙ ───
-        (function () {
-            var build = '<?= HELPFILE_BUILD ?>';
-            if (build === 'dev') return; // сборка не через deploy.php — не проверяем
-            fetch('https://api.github.com/repos/Lernoy/seo-helpfile/commits/master', {
-                headers: { 'Accept': 'application/vnd.github.v3+json' }
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (!data || !data.sha) return;
-                if (data.sha.indexOf(build) === 0) return; // актуальная версия
-                var badge = document.getElementById('update-badge');
-                if (badge) badge.style.display = 'flex';
-            })
-            .catch(function () {});
         })();
     </script>
 </body>

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ===================== ИНИЦИАЛИЗАЦИЯ CMS =====================
 if (CMS_TYPE === 'BITRIX') {
     require_once($docRoot . '/bitrix/modules/main/include/prolog_before.php');
