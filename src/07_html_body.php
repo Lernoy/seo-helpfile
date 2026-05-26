@@ -19,6 +19,7 @@
         <div class="topbar-nav">
             <button class="nav-tab" data-target="meta-editor">Редактор метатегов</button>
             <button class="nav-tab" data-target="docx-converter">Конвертер DOCX → HTML</button>
+            <button class="nav-tab" data-target="server-info">Сервер</button>
         </div>
 
         <div class="topbar-sep"></div>
@@ -250,6 +251,209 @@
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- СЕКЦИЯ 3: SERVER INFO -->
+        <div id="panel-server-info" class="service-panel">
+            <div class="card">
+                <div class="card-head">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a90d9" stroke-width="2" stroke-linecap="round">
+                        <rect x="2" y="2" width="20" height="8" rx="2"/>
+                        <rect x="2" y="14" width="20" height="8" rx="2"/>
+                        <line x1="6" y1="6" x2="6.01" y2="6"/>
+                        <line x1="6" y1="18" x2="6.01" y2="18"/>
+                    </svg>
+                    <h2>Информация о сервере</h2>
+                </div>
+                <?php
+                function hf_fmt_bytes($bytes) {
+                    if ($bytes === false || $bytes === null) return '—';
+                    $units = ['Б','КБ','МБ','ГБ','ТБ'];
+                    $i = 0;
+                    while ($bytes >= 1024 && $i < 4) { $bytes /= 1024; $i++; }
+                    return round($bytes, 1) . ' ' . $units[$i];
+                }
+
+                $diskRoot  = $_SERVER['DOCUMENT_ROOT'] ?? __DIR__;
+                $diskFree  = @disk_free_space($diskRoot);
+                $diskTotal = @disk_total_space($diskRoot);
+                $diskUsedPct = ($diskTotal && $diskFree !== false)
+                    ? (int)round((1 - $diskFree / $diskTotal) * 100)
+                    : null;
+                $diskBarClass = ($diskUsedPct === null) ? 'ok'
+                    : ($diskUsedPct >= 90 ? 'err' : ($diskUsedPct >= 75 ? 'warn' : 'ok'));
+
+                $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                    || ($_SERVER['SERVER_PORT'] ?? '') == '443';
+
+                $exts = [
+                    'curl'     => 'cURL',
+                    'zip'      => 'ZipArchive',
+                    'mbstring' => 'mbstring',
+                    'json'     => 'json',
+                    'openssl'  => 'OpenSSL',
+                    'pdo'      => 'PDO',
+                    'gd'       => 'GD',
+                    'imagick'  => 'Imagick',
+                    'dom'      => 'DOM',
+                    'xml'      => 'XML',
+                ];
+
+                $opcacheOn = extension_loaded('Zend OPcache') && ini_get('opcache.enable');
+                $aufo      = (bool) ini_get('allow_url_fopen');
+                $writable  = is_writable(__DIR__);
+                $tz        = date_default_timezone_get();
+                ?>
+                <div class="srvinfo-grid">
+
+                    <!-- Среда -->
+                    <div class="srvinfo-card">
+                        <div class="srvinfo-card-head">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            Среда
+                        </div>
+                        <table class="srvinfo-table">
+                            <tr><td>PHP</td><td><?= PHP_VERSION ?></td></tr>
+                            <tr><td>SAPI</td><td><?= PHP_SAPI ?></td></tr>
+                            <tr><td>ОС</td><td><?= htmlspecialchars(PHP_OS_FAMILY . ' / ' . php_uname('r')) ?></td></tr>
+                            <tr><td>Архитектура</td><td><?= PHP_INT_SIZE * 8 ?>-bit</td></tr>
+                            <tr><td>Веб-сервер</td><td><?= htmlspecialchars($_SERVER['SERVER_SOFTWARE'] ?? '—') ?></td></tr>
+                            <tr><td>CMS</td><td><?= CMS_TYPE ?></td></tr>
+                        </table>
+                    </div>
+
+                    <!-- PHP конфигурация -->
+                    <div class="srvinfo-card">
+                        <div class="srvinfo-card-head">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            PHP конфигурация
+                        </div>
+                        <table class="srvinfo-table">
+                            <tr><td>memory_limit</td><td><?= ini_get('memory_limit') ?></td></tr>
+                            <tr><td>upload_max_filesize</td><td><?= ini_get('upload_max_filesize') ?></td></tr>
+                            <tr><td>post_max_size</td><td><?= ini_get('post_max_size') ?></td></tr>
+                            <tr><td>max_execution_time</td><td><?= ini_get('max_execution_time') ?> с</td></tr>
+                            <tr><td>max_file_uploads</td><td><?= ini_get('max_file_uploads') ?></td></tr>
+                            <tr><td>display_errors</td><td><?= ini_get('display_errors') ? 'On' : 'Off' ?></td></tr>
+                            <tr>
+                                <td>OPcache</td>
+                                <td>
+                                    <span class="si-dot <?= $opcacheOn ? 'si-dot-ok' : 'si-dot-off' ?>"></span>
+                                    <span class="<?= $opcacheOn ? 'si-ok' : '' ?>"><?= $opcacheOn ? 'включён' : 'выключен' ?></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Расширения -->
+                    <div class="srvinfo-card">
+                        <div class="srvinfo-card-head">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            Расширения
+                        </div>
+                        <table class="srvinfo-table">
+                            <?php foreach ($exts as $ext => $label):
+                                $ok = extension_loaded($ext);
+                            ?>
+                            <tr>
+                                <td><?= $label ?></td>
+                                <td>
+                                    <span class="si-dot <?= $ok ? 'si-dot-ok' : 'si-dot-off' ?>"></span>
+                                    <span class="<?= $ok ? 'si-ok' : '' ?>"><?= $ok ? 'да' : 'нет' ?></span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                            <tr>
+                                <td>allow_url_fopen</td>
+                                <td>
+                                    <span class="si-dot <?= $aufo ? 'si-dot-ok' : 'si-dot-warn' ?>"></span>
+                                    <span class="<?= $aufo ? 'si-ok' : 'si-warn' ?>"><?= $aufo ? 'включён' : 'выключен' ?></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Файловая система -->
+                    <div class="srvinfo-card">
+                        <div class="srvinfo-card-head">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            Файловая система
+                        </div>
+                        <table class="srvinfo-table">
+                            <tr><td>DOCUMENT_ROOT</td><td><?= htmlspecialchars($diskRoot) ?></td></tr>
+                            <tr><td>Папка скрипта</td><td><?= htmlspecialchars(__DIR__) ?></td></tr>
+                            <tr>
+                                <td>Запись в папку</td>
+                                <td>
+                                    <span class="si-dot <?= $writable ? 'si-dot-ok' : 'si-dot-err' ?>"></span>
+                                    <span class="<?= $writable ? 'si-ok' : 'si-err' ?>"><?= $writable ? 'разрешена' : 'запрещена' ?></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Свободно / Всего</td>
+                                <td><?= hf_fmt_bytes($diskFree) ?> / <?= hf_fmt_bytes($diskTotal) ?></td>
+                            </tr>
+                            <?php if ($diskUsedPct !== null): ?>
+                            <tr>
+                                <td>Занято</td>
+                                <td>
+                                    <div class="srvinfo-bar-wrap">
+                                        <span class="<?= $diskBarClass === 'err' ? 'si-err' : ($diskBarClass === 'warn' ? 'si-warn' : '') ?>"><?= $diskUsedPct ?>%</span>
+                                        <div class="srvinfo-bar">
+                                            <div class="srvinfo-bar-fill <?= $diskBarClass ?>" style="width:<?= $diskUsedPct ?>%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endif; ?>
+                        </table>
+                    </div>
+
+                    <!-- Сеть -->
+                    <div class="srvinfo-card">
+                        <div class="srvinfo-card-head">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="5" width="22" height="14" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                            Сеть
+                        </div>
+                        <table class="srvinfo-table">
+                            <tr><td>Хост</td><td><?= htmlspecialchars($_SERVER['SERVER_NAME'] ?? '—') ?></td></tr>
+                            <tr><td>Порт</td><td><?= htmlspecialchars($_SERVER['SERVER_PORT'] ?? '—') ?></td></tr>
+                            <tr>
+                                <td>HTTPS</td>
+                                <td>
+                                    <span class="si-dot <?= $isHttps ? 'si-dot-ok' : 'si-dot-warn' ?>"></span>
+                                    <span class="<?= $isHttps ? 'si-ok' : 'si-warn' ?>"><?= $isHttps ? 'да' : 'нет' ?></span>
+                                </td>
+                            </tr>
+                            <tr><td>IP клиента</td><td><?= htmlspecialchars($_SERVER['REMOTE_ADDR'] ?? '—') ?></td></tr>
+                            <tr><td>IP сервера</td><td><?= htmlspecialchars($_SERVER['SERVER_ADDR'] ?? '—') ?></td></tr>
+                        </table>
+                    </div>
+
+                    <!-- Время -->
+                    <div class="srvinfo-card">
+                        <div class="srvinfo-card-head">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Время сервера
+                        </div>
+                        <table class="srvinfo-table">
+                            <tr><td>Дата и время</td><td><?= date('d.m.Y H:i:s') ?></td></tr>
+                            <tr><td>Часовой пояс</td><td><?= htmlspecialchars($tz) ?></td></tr>
+                            <tr><td>UTC offset</td><td><?= date('P') ?></td></tr>
+                            <?php
+                            $uptime = '';
+                            if (PHP_OS_FAMILY === 'Linux' && file_exists('/proc/uptime')) {
+                                $up = (float)explode(' ', file_get_contents('/proc/uptime'))[0];
+                                $d = (int)($up / 86400); $h = (int)(($up % 86400) / 3600); $m = (int)(($up % 3600) / 60);
+                                $uptime = ($d ? "{$d}д " : '') . ($h ? "{$h}ч " : '') . "{$m}м";
+                            }
+                            ?>
+                            <?php if ($uptime): ?><tr><td>Uptime</td><td><?= htmlspecialchars($uptime) ?></td></tr><?php endif; ?>
+                        </table>
+                    </div>
+
                 </div>
             </div>
         </div>

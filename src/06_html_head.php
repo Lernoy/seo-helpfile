@@ -894,5 +894,100 @@ header('Content-Type: text/html; charset=utf-8');
             font-size: 11px;
             color: #9aa0ab;
         }
+
+        /* ---- SERVER INFO ---- */
+        .srvinfo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .srvinfo-card {
+            border: 1px solid #e5e9f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .srvinfo-card-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e9f0;
+            font-size: 11px;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .srvinfo-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .srvinfo-table tr:not(:last-child) td {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .srvinfo-table td {
+            padding: 7px 14px;
+            font-size: 11px;
+            vertical-align: middle;
+        }
+
+        .srvinfo-table td:first-child {
+            color: #6b7280;
+            white-space: nowrap;
+            width: 46%;
+        }
+
+        .srvinfo-table td:last-child {
+            color: #1a1a2e;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .si-ok   { color: #166534; }
+        .si-warn { color: #92400e; }
+        .si-err  { color: #c0392b; }
+
+        .si-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .si-dot-ok   { background: #22c55e; }
+        .si-dot-warn { background: #f59e0b; }
+        .si-dot-err  { background: #ef4444; }
+        .si-dot-off  { background: #d1d5db; }
+
+        .srvinfo-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .srvinfo-bar {
+            flex: 1;
+            height: 5px;
+            background: #e5e9f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .srvinfo-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .3s;
+        }
+
+        .srvinfo-bar-fill.ok   { background: #22c55e; }
+        .srvinfo-bar-fill.warn { background: #f59e0b; }
+        .srvinfo-bar-fill.err  { background: #ef4444; }
     </style>
 </head>
