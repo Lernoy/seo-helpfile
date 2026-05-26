@@ -1,0 +1,257 @@
+﻿
+<body>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <rect width="24" height="24" rx="4" fill="#4a90d9" />
+                <path d="M6 17V10l6-4 6 4v7h-4v-4H10v4H6z" fill="white" />
+            </svg>
+            SEO Meta Editor
+        </div>
+        <div style="margin-left: 10px;">
+            <span class="badge badge-file" style="text-transform: uppercase;">
+                CMS: <?= CMS_TYPE ?>
+            </span>
+        </div>
+
+        <div class="topbar-nav">
+            <button class="nav-tab" data-target="meta-editor">Редактор метатегов</button>
+            <button class="nav-tab" data-target="docx-converter">Конвертер DOCX → HTML</button>
+        </div>
+
+        <div class="topbar-sep"></div>
+        <span class="topbar-meta" id="topbar-stats"></span>
+        <form method="POST" style="margin:0">
+            <input type="hidden" name="helpfile_logout" value="1">
+            <button type="submit" class="btn-logout">Выйти</button>
+        </form>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main">
+
+        <!-- СЕКЦИЯ 1: SEO META EDITOR -->
+        <div id="panel-meta-editor" class="service-panel">
+
+            <!-- URL INPUT CARD -->
+            <div class="card">
+                <div class="card-head">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a90d9" stroke-width="2" stroke-linecap="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                    <h2>URL для анализа</h2>
+                </div>
+                <div class="card-body">
+                    <div class="url-panel">
+                        <div style="flex:1">
+                            <textarea class="url-textarea" id="url-input" placeholder="Вставьте URL — по одному на строку. Поддерживаются полные URL (https://site.ru/path/) и пути (/path/).&#10;&#10;https://market.filikrovlya.ru/&#10;/services/"></textarea>
+                            <div class="url-hint">По одному URL на строку. Полные адреса (https://...) и относительные пути (/path/) — оба формата поддерживаются.</div>
+
+                            <!-- Чекбокс HTTP-проверки -->
+                            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #555; margin-top: 10px; cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="chk-http" style="cursor: pointer;" checked>
+                                Сверять с живым выводом страницы по HTTP (может замедлить загрузку или блокироваться сервером)
+                            </label>
+                        </div>
+                        <div class="url-actions">
+                            <button class="btn btn-primary" id="btn-load">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <polyline points="23 4 23 10 17 10" />
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                                </svg>
+                                Загрузить
+                            </button>
+                            <button class="btn btn-default" id="btn-clear-input">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                Очистить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLE CARD -->
+            <div class="card">
+                <div class="card-head">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a90d9" stroke-width="2" stroke-linecap="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <line x1="3" y1="9" x2="21" y2="9" />
+                        <line x1="3" y1="15" x2="21" y2="15" />
+                        <line x1="9" y1="3" x2="9" y2="21" />
+                    </svg>
+                    <h2>Метатеги</h2>
+                    <span id="rows-count" style="display:none"></span>
+                    <div class="toolbar-right">
+                        <div class="legend">
+                            <span class="legend-item"><span class="legend-dot dot-file"></span>Файл / WP Главная</span>
+                            <span class="legend-item"><span class="legend-dot dot-section"></span>Раздел / WP Запись</span>
+                            <span class="legend-item"><span class="legend-dot dot-element"></span>Элемент / WP Рубрика</span>
+                            <span class="legend-item"><span class="legend-dot dot-unknown"></span>Неизвестно</span>
+                        </div>
+                        <button class="btn btn-success" id="btn-save-all" disabled>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
+                            <span id="save-all-label">Сохранить изменённые</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-wrap" id="progress-wrap">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+
+                <!-- Log -->
+                <div class="log-bar" id="log-bar">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span id="log-text"></span>
+                </div>
+
+                <!-- Table -->
+                <div class="table-wrap" id="table-wrap">
+                    <div class="empty-state" id="empty-state">
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#9aa0ab" stroke-width="1.5" stroke-linecap="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <line x1="3" y1="9" x2="21" y2="9" />
+                            <line x1="9" y1="3" x2="9" y2="21" />
+                        </svg>
+                        <p>Таблица пуста</p>
+                        <small>Вставьте URL выше и нажмите «Загрузить»</small>
+                    </div>
+                    <table id="meta-table" style="display:none">
+                        <colgroup>
+                            <col class="c-num">
+                            <col class="c-url">
+                            <col class="c-type">
+                            <col class="c-name">
+                            <col class="c-ib">
+                            <col class="c-title">
+                            <col class="c-desc">
+                            <col class="c-act">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>URL</th>
+                                <th>Тип страницы</th>
+                                <th>Название сущности</th>
+                                <th>Тип / Инфоблок</th>
+                                <th>Title <span style="font-weight:400;text-transform:none;letter-spacing:0">(≤60 симв.)</span></th>
+                                <th>Description <span style="font-weight:400;text-transform:none;letter-spacing:0">(≤160 симв.)</span></th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="meta-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- СЕКЦИЯ 2: DOCX CONVERTER -->
+        <div id="panel-docx-converter" class="service-panel">
+            <div class="card">
+                <div class="card-head">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a90d9" stroke-width="2" stroke-linecap="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    <h2>Конвертер документов DOCX в HTML</h2>
+                </div>
+                <div class="card-body">
+                    <?php if ($docx_error): ?>
+                        <div class="error" style="margin-bottom: 1.5rem; padding: 10px 14px; background: #fff0f0; border: 1px solid #fca5a5; border-radius: 4px; color: #c0392b; font-size: 11px;">
+                            <?= htmlspecialchars($docx_error) ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <form class="upload-form" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <input type="file" name="docx" id="fileInput" accept=".docx">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-label"><strong>Выбрать файл .docx</strong> или перетащить его сюда</div>
+                        <div class="upload-hint">Картинки будут извлечены и сохранены в директорию скрипта автоматически</div>
+                        <div class="selected-name" id="selectedName"></div>
+                    </form>
+                    <button class="btn-submit" id="submitBtn" type="submit" form="uploadForm">Конвертировать →</button>
+
+                    <?php if ($result_html): ?>
+                        <?php
+                        $lines_count = substr_count($result_html, "\n") + 1;
+                        $img_count   = substr_count($result_html, '<img ');
+                        ?>
+
+                        <div style="margin-top: 1.5rem">
+                            <div class="result-meta" style="font-size: 11px; color: #6b7280; margin-bottom: 12px;">
+                                Найдено тегов: <span style="color: #4a90d9; font-weight: 600;"><?= $lines_count ?></span> ·
+                                Изображений: <span style="color: #4a90d9; font-weight: 600;"><?= $img_count ?></span>
+                                <?php if ($image_dir): ?> · Папка картинок: <span style="color: #4a90d9; font-weight: 600;"><?= htmlspecialchars($image_dir) ?></span><?php endif; ?>
+                            </div>
+
+                            <?php if ($h1_text): ?>
+                                <div class="h1-field-wrap">
+                                    <div class="h1-label">Обнаруженный заголовок H1</div>
+                                    <textarea class="h1-field" id="h1Field" rows="1" readonly onclick="this.select()"><?= htmlspecialchars($h1_text) ?></textarea>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="docx-tabs">
+                                <div class="docx-tab active" data-subtab="html">HTML-код</div>
+                                <?php if ($img_count > 0): ?>
+                                    <div class="docx-tab" data-subtab="images">Изображения (<?= $img_count ?>)</div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="docx-pane active" id="pane-html">
+                                <div class="code-wrap">
+                                    <button class="copy-btn" id="copyBtn">Скопировать</button>
+                                    <textarea class="code-block" id="codeBlock" readonly><?= htmlspecialchars($result_html) ?></textarea>
+                                </div>
+                                <?php if ($image_dir): ?>
+                                    <div class="img-dir">Изображения сохранены в <span><?= htmlspecialchars($image_dir) ?></span></div>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if ($img_count > 0): ?>
+                                <div class="docx-pane" id="pane-images">
+                                    <?php
+                                    preg_match_all('/src="([^"]+)"/', $result_html, $matches);
+                                    $img_paths = $matches[1] ?? [];
+                                    ?>
+                                    <?php if ($img_paths): ?>
+                                        <div class="imgs-grid">
+                                            <?php foreach ($img_paths as $src): ?>
+                                                <div class="img-card">
+                                                    <img src="<?= htmlspecialchars($src) ?>" alt="">
+                                                    <div class="img-card-meta">
+                                                        <div class="img-card-name"><?= htmlspecialchars(basename($src)) ?></div>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="no-imgs">Картинок не найдено</div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+    </div>
