@@ -65,6 +65,15 @@ if (!empty($_SESSION['deploy_ok']) && isset($_POST['do_deploy'])) {
     }
 
     if (empty($errors)) {
+        // Вшиваем SHA последнего коммита, чтобы helpfile.php умел проверять обновления
+        $apiData = fetch_url('https://api.github.com/repos/Lernoy/seo-helpfile/commits/master');
+        if ($apiData) {
+            $commit = json_decode($apiData, true);
+            if (!empty($commit['sha'])) {
+                $sha7 = substr($commit['sha'], 0, 7);
+                $out  = str_replace("define('HELPFILE_BUILD', 'dev')", "define('HELPFILE_BUILD', '{$sha7}')", $out);
+            }
+        }
         file_put_contents(__DIR__ . '/helpfile.php', $out);
         $deployed = true;
     }

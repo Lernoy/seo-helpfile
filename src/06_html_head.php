@@ -105,6 +105,26 @@ header('Content-Type: text/html; charset=utf-8');
             color: #c0392b;
         }
 
+        .update-badge {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #92400e;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+
+        .update-badge:hover {
+            background: #fde68a;
+        }
+
         /* ---- MAIN LAYOUT ---- */
         .main {
             max-width: 1600px;
