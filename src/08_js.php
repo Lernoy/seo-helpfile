@@ -543,6 +543,25 @@
             }
 
         })();
+
+        // ─── UPDATE CHECKER ───
+        (function () {
+            var build = '<?= HELPFILE_BUILD ?>';
+            if (build === 'dev') return; // локальная сборка — не проверяем
+            fetch('https://raw.githubusercontent.com/Lernoy/seo-helpfile/master/VERSION?_=' + Date.now(), {
+                cache: 'no-store'
+            })
+            .then(function (r) { return r.ok ? r.text() : null; })
+            .then(function (text) {
+                if (!text) return;
+                var latest = text.trim();
+                if (latest && latest !== build) {
+                    var badge = document.getElementById('update-badge');
+                    if (badge) badge.style.display = 'flex';
+                }
+            })
+            .catch(function () {});
+        })();
     </script>
 </body>
 

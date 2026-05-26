@@ -58,10 +58,10 @@ function fetch_url($url, $headers = []) {
     return false;
 }
 
-$deployed  = false;
-$errors    = [];
-$sha7      = null;
-$shaError  = null;
+$deployed   = false;
+$errors     = [];
+$buildVer   = null;
+$buildError = null;
 
 if (!empty($_SESSION['deploy_ok']) && isset($_POST['do_deploy'])) {
     $out = '';
@@ -80,32 +80,20 @@ if (!empty($_SESSION['deploy_ok']) && isset($_POST['do_deploy'])) {
     }
 
     if (empty($errors)) {
-        // Вшиваем SHA последнего коммита
-        $apiHeaders = [
-            'Accept: application/vnd.github.v3+json',
-            'User-Agent: deploy.php/1.0',
-        ];
-        $apiData = fetch_url(
-            'https://api.github.com/repos/Lernoy/seo-helpfile/commits/master',
-            $apiHeaders
-        );
-        if ($apiData) {
-            $commit = json_decode($apiData, true);
-            if (!empty($commit['sha'])) {
-                $sha7 = substr($commit['sha'], 0, 7);
-                $out  = str_replace(
-                    "define('HELPFILE_BUILD', 'dev')",
-                    "define('HELPFILE_BUILD', '{$sha7}')",
-                    $out
-                );
-            } else {
-                $shaError = 'Ответ API получен, но поле sha не найдено';
-                if (!empty($commit['message'])) {
-                    $shaError .= ': ' . $commit['message']; // напр. "API rate limit exceeded"
-                }
-            }
+        // Скачиваем VERSION из репозитория (raw.githubusercontent.com — тот же домен, что и исходники)
+        $verRaw = fetch_url(REPO_RAW . 'VERSION');
+        if ($verRaw !== false) {
+            $buildVer = trim($verRaw);
+        }
+
+        // Пишем .helpfile_build рядом с helpfile.php
+        $buildFile = __DIR__ . '/.helpfile_build';
+        if ($buildVer) {
+            file_put_contents($buildFile, $buildVer);
         } else {
-            $shaError = 'Не удалось обратиться к api.github.com (нет доступа с сервера)';
+            $buildError = 'Не удалось скачать файл VERSION из репозитория';
+            // Удаляем старый .helpfile_build, чтобы билд не остался от предыдущего деплоя
+            if (file_exists($buildFile)) unlink($buildFile);
         }
 
         file_put_contents(__DIR__ . '/helpfile.php', $out);
@@ -171,12 +159,12 @@ if (empty($_SESSION['deploy_ok'])):
     <div class="ok">
         <div class="ok-title">Готово!</div>
         <div class="ok-sub">helpfile.php собран из <?= count(PARTS) ?> частей</div>
-        <?php if ($sha7): ?>
-            <div class="sha-ok">Сборка: <code><?= htmlspecialchars($sha7) ?></code> — обновления будут отслеживаться автоматически</div>
+        <?php if ($buildVer): ?>
+            <div class="sha-ok">Версия: <code><?= htmlspecialchars($buildVer) ?></code> — файл <code>.helpfile_build</code> создан, проверка обновлений активна</div>
         <?php else: ?>
             <div class="sha-warn">
-                Версия сборки не вшита (build = 'dev') — проверка обновлений будет недоступна.<br>
-                Причина: <?= htmlspecialchars($shaError ?? 'неизвестно') ?>
+                Версия не определена — проверка обновлений будет недоступна.<br>
+                Причина: <?= htmlspecialchars($buildError ?? 'неизвестно') ?>
             </div>
         <?php endif; ?>
         <a href="/helpfile.php">Открыть helpfile.php →</a>

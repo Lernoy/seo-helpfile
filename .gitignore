@@ -1,3 +1,5 @@
 helpfile.php
 helpfile_debug.log
+.helpfile_secret
+.helpfile_build
 /image/

@@ -5,6 +5,11 @@ define('NO_KEEP_STATISTIC', true);
 define('NOT_CHECK_PERMISSIONS', true);
 define('BX_SECURITY_SHOW_MESSAGE', true);
 
+define('HELPFILE_BUILD_FILE', __DIR__ . '/.helpfile_build');
+$_hfBuild = (file_exists(HELPFILE_BUILD_FILE) && ($v = trim(file_get_contents(HELPFILE_BUILD_FILE))) !== '') ? $v : 'dev';
+define('HELPFILE_BUILD', $_hfBuild);
+unset($_hfBuild, $v);
+
 define('HELPFILE_DEBUG', false); // Включите для отладки (лог в helpfile_debug.log)
 ini_set('error_log', __DIR__ . '/helpfile_debug.log');
 ini_set('log_errors', '1');
