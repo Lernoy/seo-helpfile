@@ -5,7 +5,12 @@ define('NO_KEEP_STATISTIC', true);
 define('NOT_CHECK_PERMISSIONS', true);
 define('BX_SECURITY_SHOW_MESSAGE', true);
 
-define('HELPFILE_BUILD', 'dev'); // Перезаписывается deploy.php при сборке (SHA коммита)
+define('HELPFILE_BUILD', 'dev');
+
+// Сбрасываем буферы CMS (Bitrix/WordPress открывают ob_start через auto_prepend_file)
+while (ob_get_level() > 0) {
+    ob_end_clean();
+} // Перезаписывается deploy.php при сборке (SHA коммита)
 define('HELPFILE_DEBUG', false); // Включите для отладки (лог в helpfile_debug.log)
 ini_set('error_log', __DIR__ . '/helpfile_debug.log');
 ini_set('log_errors', '1');

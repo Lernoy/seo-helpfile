@@ -1,6 +1,7 @@
 ﻿<?php
 // ===================== AJAX: ЗАГРУЗКА СТРОК (SEO META) =====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'load_urls') {
+    while (ob_get_level() > 0) { ob_end_clean(); }
     header('Content-Type: application/json; charset=utf-8');
     session_write_close();
     $raw  = trim($_POST['urls'] ?? '');
@@ -35,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // ===================== AJAX: СОХРАНЕНИЕ (SEO META) =====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_meta') {
+    while (ob_get_level() > 0) { ob_end_clean(); }
     header('Content-Type: application/json; charset=utf-8');
     session_write_close();
     $id          = $_POST['id'] ?? '';
